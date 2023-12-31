@@ -11,6 +11,10 @@
       "secret_config.py",
       "README.md",
       "LICENSE.md"
+    ],
+    "file_types": [
+      ".py",
+      ".md"
     ]
   }
   
