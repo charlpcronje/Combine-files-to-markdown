@@ -1,0 +1,16 @@
+{
+    "root_path": "C:/dev/Pyton/Code Index and Reference",
+    "output_path": "C:/dev/Pyton/Combine Files to Markdown/combined_files3.md",
+    "exclude_folders": [
+      "node_modules",
+      "venv",
+      "build",
+      "dist"
+    ],
+    "exclude_files": [
+      "secret_config.py",
+      "README.md",
+      "LICENSE.md"
+    ]
+  }
+  
