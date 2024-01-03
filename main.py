@@ -4,6 +4,7 @@ import sys
 
 def read_config(config_path):
     with open(config_path, 'r') as file:
+        print('File opened for reading:', file.name)
         return json.load(file)
 
 def should_exclude(path, exclude_list):
@@ -17,7 +18,8 @@ def process_files(root_path, exclude_folders, exclude_files):
             if file.endswith(('.py', '.md', '.js', '.py', '.json')) and not should_exclude(os.path.join(root, file), exclude_files):
                 file_path = os.path.join(root, file)
                 with open(file_path, 'r', encoding='utf-8') as f:
-                    combined_content += f"## File: {os.path.relpath(file_path, root_path)}\n```{file.split('.')[-1]}\n{f.read()}\n```\n\n---\n\n"
+                    print('File opened for reading:', f.name)
+                    combined_content += f"## File: {os.path.relpath(file_path, root_path)}\n```{file.split('.')[-1]}\n{f.read()}\n```\n\n"
     return combined_content
 
 def main():
@@ -30,6 +32,7 @@ def main():
     combined_content = process_files(config['root_path'], config['exclude_folders'], config['exclude_files'])
 
     with open(config['output_path'], 'w', encoding='utf-8') as output_file:
+        print('File opened for writing:', output_file.name)
         output_file.write(combined_content)
 
 if __name__ == "__main__":
