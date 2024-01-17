@@ -1,17 +1,19 @@
 {
-    "root_path": "C:/dev/Pyton/Combine Files to Markdown",
-    "output_path": "C:/dev/Pyton/Combine Files to Markdown/Combined.md",
+    "root_path": "/var/www/context/api.igniteai.webally.co.za/",
+    "output_path": "/var/www/context/api.igniteai.webally.co.za/Combined.md",
+    "gitignore_path": "/var/www/context/api.igniteai.webally.co.za/.gitignore",
     "exclude_folders": [
+      "__pycache__",
+      ".vscode",
       ".history",
       "combined"
     ],
     "exclude_files": [
-      "secret_config.py"
+      "Combined.md"
     ],
     "file_types": [
       ".py",
-      ".md",
-      ".json"
+      ".env"
     ]
 }
   
