@@ -1,6 +1,6 @@
 # Combine Files to Markdown
 
-This Python script, "Combine Files to Markdown," efficiently aggregates content from various files into a single Markdown document. It's designed for streamlined documentation and code snippet compilation, offering flexibility for project-related file management.
+This Python script, "Combine Files to Markdown," efficiently aggregates content from various files into a single Markdown document. It's designed for streamlined documentation and code snippet compilation, offering flexibility for project-related file management. It also offers the ability to customize the file selection process to include only the files that you need. .gitignore files are also supported.
 
 Certainly, let's break down each feature into its own heading and provide detailed explanations:
 
