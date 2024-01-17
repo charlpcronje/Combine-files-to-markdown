@@ -53,7 +53,7 @@ Certainly, let's break down each feature into its own heading and provide detail
 
 These features collectively make the "Combine Files to Markdown" script a versatile tool for aggregating and analyzing content from diverse files into a single, well-structured Markdown document.
 
-### .gitignore Pattern Recognition
+### 10. gitignore Pattern Recognition
 
 - **Description**: The script includes a feature that recognizes patterns from a `.gitignore` file specified in the configuration. If you have a `.gitignore` file in your project, this feature ensures that the files and directories excluded by your Gitignore rules are also excluded from the file aggregation process. It respects your version control settings, preventing unnecessary files from being included in the Markdown output.
 - **Usage**: If you have a `.gitignore` file in your project, simply specify its path in the `"gitignore_path"` field of the `config.json` file. The script will read the patterns from the Gitignore file and use them to exclude files and directories during aggregation.
