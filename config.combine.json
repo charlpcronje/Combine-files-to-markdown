@@ -1,19 +1,21 @@
 {
-    "root_path": "/var/www/context/api.igniteai.webally.co.za/",
-    "output_path": "/var/www/context/api.igniteai.webally.co.za/Combined.md",
-    "gitignore_path": "/var/www/context/api.igniteai.webally.co.za/.gitignore",
+    "root_path": "/var/www/tools/projectScanner",
+    "output_path": "/var/www/tools/projectScanner/Combined.md",
+    "gitignore_path": "",
     "exclude_folders": [
-      "__pycache__",
+      "logs",
       ".vscode",
       ".history",
-      "combined"
+      "combined",
+      "tests"
     ],
     "exclude_files": [
       "Combined.md"
     ],
     "file_types": [
       ".py",
-      ".env"
+      ".env",
+      ".md"
     ]
 }
   

@@ -1,4 +1,4 @@
 .history
 combined
 config
-.json
+*.json
