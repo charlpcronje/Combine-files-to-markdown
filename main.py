@@ -1,3 +1,4 @@
+# main.py
 import os
 import json
 import re
@@ -8,6 +9,7 @@ from nltk.tokenize import word_tokenize
 # Ensure required NLTK resources are downloaded
 nltk.download('punkt')
 
+
 class FileCombiner:
     def __init__(self, config_path):
         """
@@ -17,6 +19,9 @@ class FileCombiner:
         with open(config_path, 'r') as file:
             self.config = json.load(file)
         self.combined_content = ""
+        self.heading = self.config.get('heading', 'File Analysis Report')
+        self.description = self.config.get(
+            'description', 'This document contains an analysis of the project files.')
         self.processed_files = []
         self.gitignore_patterns = self.load_gitignore_patterns()
 
@@ -32,7 +37,6 @@ class FileCombiner:
                 patterns = file.readlines()
         return patterns
 
-    # FileCombiner.py-M-generate_file_tree-1-A+
     def generate_file_tree(self):
         """
         Generates an ASCII-style file tree of the files that would be combined according to the configuration rules,
@@ -50,7 +54,8 @@ class FileCombiner:
         file_tree = []
 
         for root, dirs, files in os.walk(root_path):
-            dirs[:] = [d for d in dirs if not self.should_exclude(os.path.join(root, d), exclude_folders, root_path)]
+            dirs[:] = [d for d in dirs if not self.should_exclude(
+                os.path.join(root, d), exclude_folders, root_path)]
             level = root.replace(root_path, '').count(os.sep)
             indent = '    ' * level  # Adjust indentation for better Markdown formatting
             # Append directory in bold
@@ -64,14 +69,12 @@ class FileCombiner:
                 if any(re.match(pattern, file_path) for pattern in self.gitignore_patterns):
                     continue
                 # Format each file as a Markdown link
-                rel_path = os.path.relpath(file_path, start=root_path).replace(' ', '%20')
+                rel_path = os.path.relpath(
+                    file_path, start=root_path).replace(' ', '%20')
                 file_tree.append(f"{sub_indent}- [{file}]({rel_path})")
 
         return '\n'.join(file_tree)
 
-
-
-    # FileCombiner.py-M-write_file_tree-1-A+
     def write_file_tree(self, file_tree):
         """
         Writes the Markdown formatted file tree to a file named 'tree.md' in the same directory as the output file.
@@ -85,17 +88,18 @@ class FileCombiner:
         It then writes the provided file tree string to 'tree.md', effectively saving the project's
         structure in a navigable Markdown format. If successful, the method prints a confirmation message.
         """
-        tree_md_path = os.path.join(os.path.dirname(self.config['output_path']), 'tree.md')
-        
+        tree_md_path = os.path.join(os.path.dirname(
+            self.config['output_path']), 'tree.md')
+
         try:
             with open(tree_md_path, 'w', encoding='utf-8') as tree_md_file:
                 tree_md_file.write(file_tree)
-                print(f"Markdown file tree written successfully to: {tree_md_path}")
+                print(
+                    f"Markdown file tree written successfully to: {tree_md_path}")
         except IOError as e:
-            print(f"Failed to write the Markdown file tree to {tree_md_path}: {e}")
+            print(
+                f"Failed to write the Markdown file tree to {tree_md_path}: {e}")
 
-
-    # FileCombiner.py-M-should_exclude-1-A+
     def should_exclude(self, path, exclude_list, root_path):
         """
         Determines if a file or directory should be excluded from processing and inclusion
@@ -115,11 +119,11 @@ class FileCombiner:
         """
         abs_path = os.path.abspath(path)
         for exclude in exclude_list:
-            exclude_abs_path = os.path.abspath(os.path.join(root_path, exclude))
+            exclude_abs_path = os.path.abspath(
+                os.path.join(root_path, exclude))
             if abs_path.startswith(exclude_abs_path):
                 return True
         return False
-
 
     def is_file_type_supported(self, file_name, supported_types):
         """
@@ -129,6 +133,9 @@ class FileCombiner:
         Returns: True if the file type is supported, False otherwise.
         """
         file_extension = os.path.splitext(file_name)[1]
+        # Check for files without a name but with an extension (e.g., .env, .htaccess)
+        if not file_extension:
+            file_extension = f".{file_name.split('.')[-1]}"
         return file_extension in supported_types
 
     def process_files(self):
@@ -136,54 +143,129 @@ class FileCombiner:
         Processes files from the root directory, combining content from files that match
         the criteria specified in the configuration. Keeps track of processed file paths.
         """
+        print("Starting the file processing...")
         root_path = self.config['root_path']
         exclude_folders = self.config['exclude_folders']
         exclude_files = self.config['exclude_files']
         file_types = self.config['file_types']
 
+        file_count = 0  # Counter to monitor the number of files processed
+
         for root, dirs, files in os.walk(root_path):
-            dirs[:] = [d for d in dirs if not self.should_exclude(os.path.join(root, d), exclude_folders, root_path)]
+            print(f"Checking directory: {root}")
+            dirs[:] = [d for d in dirs if not self.should_exclude(
+                os.path.join(root, d), exclude_folders, root_path)]
             for file in files:
                 file_path = os.path.join(root, file)
                 if self.should_exclude(file_path, exclude_files, root_path) or not self.is_file_type_supported(file, file_types):
+                    print(f"Excluded: {file_path}")
                     continue
                 # Check against gitignore patterns
                 if any(re.match(pattern, file_path) for pattern in self.gitignore_patterns):
+                    print(f"Ignored by .gitignore pattern: {file_path}")
                     continue
+                try:
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        file_content = f.read()
+                    print(f"File read successfully with UTF-8: {file_path}")
+                except UnicodeDecodeError:
+                    try:
+                        with open(file_path, 'r', encoding='ISO-8859-1') as f:
+                            file_content = f.read()
+                        print(
+                            f"File read successfully with ISO-8859-1: {file_path}")
+                    except UnicodeDecodeError as e:
+                        print(
+                            f"Failed to read {file_path} with UTF-8 and ISO-8859-1 encodings: {e}")
+                        continue
                 self.processed_files.append(file_path)
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    print(f'File opened for reading: {file_path}')
-                    self.combined_content += f"## File: {os.path.relpath(file_path, root_path)}\n```{os.path.splitext(file)[1][1:]}\n{f.read()}\n```\n\n"
+                file_type = os.path.splitext(file)[1][1:]
+                self.combined_content += f"## File: {os.path.relpath(file_path, root_path)}\n```{file_type}\n{file_content}\n```\n\n"
+                file_count += 1
+                if file_count % 10 == 0:
+                    print(f"{file_count} files processed...")
+
+        print(f"Total {file_count} files processed.")
+
+    def pad_string_to_length(self, s: str, length: int = 36) -> str:
+        """
+        Pads the input string `s` to ensure it is at least `length` characters long.
+        If `s` is shorter than `length`, spaces are added to the end.
+
+        Args:
+        - s (str): The input string to be padded.
+        - length (int): The minimum length of the output string. Default is 36.
+
+        Returns:
+        - str: The padded string.
+        """
+        return s.ljust(length)
 
     def analyze_files(self):
         """
         Analyzes each processed file for line, word, and AI token counts.
         Returns a markdown formatted string report with analysis results for each file and overall totals.
         """
-        total_lines = total_words = total_tokens = 0
-        report = "## Analysis Report\n\n"
+        heading = self.config.get('heading', 'File Analysis Report')
+        description = self.config.get(
+            'description', 'This document contains an analysis of the project files.')
 
-        report += "| No. | File | Lines | Words | AI Tokens |\n"
-        report += "| --- | ---- | ----- | ----- | --------- |\n"
+        if heading:
+            print(f"Heading: {heading}")
+            self.combined_content += f"# {heading}\n\n"
+
+        if description:
+            print(f"Description: {description}")
+            self.combined_content += f"{description}\n\n"
+
+        total_lines = total_words = total_tokens = 0
+        report = f"# {heading}\n\n"
+        report += f"{description}\n\n"
+
+        report += "| No.   | File                                 | Lines    | Words    | AI Tokens |\n"
+        report += "| ----- | ------------------------------------ | -------- | -------- | --------- |\n"
 
         for idx, file_path in enumerate(self.processed_files, start=1):
-            with open(file_path, 'r', encoding='utf-8') as file:
-                content = file.read()
-                lines, words, tokens = self.count_words_and_tokens(content)
-                rel_path = "./" + os.path.relpath(file_path, start=self.config['root_path'])
-                report += f"| {idx} | {rel_path} | {lines} | {words} | {tokens} |\n"
-                total_lines += lines
-                total_words += words
-                total_tokens += tokens
-        report += f"|  | Total | {total_lines} | {total_words} | {total_tokens} |\n\n"
-        
+            try:
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    content = file.read()
+                print(
+                    f"File read successfully for analysis (UTF-8): {file_path}")
+            except UnicodeDecodeError:
+                try:
+                    with open(file_path, 'r', encoding='ISO-8859-1') as file:
+                        content = file.read()
+                    print(
+                        f"File read successfully for analysis (ISO-8859-1): {file_path}")
+                except UnicodeDecodeError as e:
+                    print(
+                        f"Failed to read {file_path} for analysis with UTF-8 and ISO-8859-1 encodings: {e}")
+                    continue
+            lines, words, tokens = self.count_words_and_tokens(content)
+            line = self.pad_string_to_length(str(lines), 8)
+            word = self.pad_string_to_length(str(words), 8)
+            token = self.pad_string_to_length(str(tokens), 8)
+            idd = self.pad_string_to_length(str(idx), 3)
+            rel_path = "./" + \
+                os.path.relpath(file_path, start=self.config['root_path'])
+
+            thePath = self.pad_string_to_length(rel_path)
+            report += f"|  {idd}  | {thePath} | {line} | {word} | {token}  |\n"
+            total_lines += lines
+            total_words += words
+            total_tokens += tokens
+
+            tl = self.pad_string_to_length(str(total_lines), 8)
+            tw = self.pad_string_to_length(str(total_words), 8)
+            tt = self.pad_string_to_length(str(total_tokens), 8)
+        report += f"|       | Total                                | {tl} | {tw} | {tt}  |\n\n"
+
         report += "\n## Total Counts Across All Files. Tokenizer Used: NLTK's Punkt Tokenizer\n"
         report += f"- Total Lines: {total_lines}\n"
         report += f"- Total Words: {total_words}\n"
         report += f"- Total AI Tokens: {total_tokens}\n"
-        
-        return report
 
+        return report
 
     def count_words_and_tokens(self, text):
         """
@@ -194,9 +276,9 @@ class FileCombiner:
         """
         lines = text.count('\n') + 1  # Counting the number of lines
         words = text.split()
-        tokens = word_tokenize(text)  # NLTK's word_tokenize is used for AI tokenization
+        # NLTK's word_tokenize is used for AI tokenization
+        tokens = word_tokenize(text)
         return lines, len(words), len(tokens)
-
 
     def write_combined_file(self):
         """
@@ -206,21 +288,22 @@ class FileCombiner:
             print(f'File opened for writing: {self.config["output_path"]}')
             output_file.write(self.combined_content)
 
-
     def append_html_styles(self):
         """
-        Appends HTML content for styling, including a hidden comment and style tags, 
-        to the end of the Markdown file. This method assumes that the Markdown file 
+        Appends HTML content for styling, including a hidden comment and style tags,
+        to the end of the Markdown file. This method assumes that the Markdown file
         will be converted to HTML and the styles will be applied there.
         """
         html_content = """
-<p id="hidden_comment">
-    This is a hidden comment. It explains that the following style tag is meant to 
-    style HTML content if this Markdown is converted to HTML. This comment should 
+
+
+<p id = "hidden_comment" >
+    This is a hidden comment. It explains that the following style tag is meant to
+    style HTML content if this Markdown is converted to HTML. This comment should
     not be visible in most Markdown renderers.
-</p>
-<style>
-    #hidden_comment {
+</p >
+<style >
+    # hidden_comment {
         display: none;
     }
     table {
@@ -235,9 +318,10 @@ class FileCombiner:
 </style>
 """
         return html_content
-    
 
-# main.py-F-main-1-A+
+# main.py
+
+
 def main():
     """
     The main entry point of the script, adapted to interpret command line arguments
@@ -248,20 +332,29 @@ def main():
     Command Line Arguments:
     - First argument (required): Path to the JSON configuration file.
     - Second argument (optional): '--tree' flag to trigger ASCII tree generation.
+    - Third argument (optional): '--dark-mode' flag to include dark mode styles.
 
     Provides usage instructions for incorrect arguments and ensures the correct flow
     based on the presence of the '--tree' flag.
     """
     # Check for minimum number of arguments.
     if len(sys.argv) < 2:
-        print("Usage: python main.py <config.json> [--tree]")
+        print("Usage: python main.py <config.json> [--tree] [--dark-mode]")
         sys.exit(1)
 
     # Initialize FileCombiner with the provided configuration file.
-    file_combiner = FileCombiner(sys.argv[1])
+    config_file_path = sys.argv[1]
+    if not os.path.isabs(config_file_path):  # Check if it's a relative path
+        config_file_path = os.path.join(
+            os.getcwd(), config_file_path)  # Make it absolute
+
+    # Initialize FileCombiner with the provided configuration file.
+    file_combiner = FileCombiner(config_file_path)
+
+    include_html_styles = '--dark-mode' in sys.argv
 
     # Check for the '--tree' flag specifically as the third argument.
-    if len(sys.argv) == 3 and sys.argv[2] == '--tree':
+    if '--tree' in sys.argv:
         print("Generating file tree...")
         file_tree = file_combiner.generate_file_tree()
         print("File tree generated.")
@@ -272,17 +365,20 @@ def main():
         file_combiner.process_files()
         print("Files processed.")
         file_combiner.write_combined_file()
-        print(f"Combined file written to: {file_combiner.config['output_path']}")
+        print(
+            f"Combined file written to: {file_combiner.config['output_path']}")
 
         # Perform file analysis and append the analysis report along with HTML styling to the combined file.
         print("Analyzing files...")
         analysis_report = file_combiner.analyze_files()
-        html_content = file_combiner.append_html_styles()
+        html_content = file_combiner.append_html_styles() if include_html_styles else ""
         with open(file_combiner.config['output_path'], 'r+', encoding='utf-8') as file:
             combined_content = file.read()
             file.seek(0, 0)
-            file.write(analysis_report + '\n' + combined_content + '\n' + html_content)
-        print("Analysis report and HTML content appended to the combined file.")
+            file.write(analysis_report + '\n' +
+                       combined_content + '\n' + html_content)
+    print("Analysis report and HTML content appended to the combined file.")
+
 
 # Ensure the script executes only when run directly.
 if __name__ == "__main__":
